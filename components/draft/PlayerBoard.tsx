@@ -269,12 +269,9 @@ export function PlayerBoard({
               <span className="text-sm tabular-nums text-neutral-300">
                 {fmtPoints(p.point_value)}
               </span>
-              {!drafted && (
+              {!drafted && canPick && (
                 <button
-                  onClick={() => {
-                    if (!canPick) return; // PREVIEW: button is visible but non-interactive when you can't pick
-                    onPick(p);
-                  }}
+                  onClick={() => onPick(p)}
                   className="text-xs rounded bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold px-3 py-1.5 shrink-0 max-w-[8rem] truncate"
                   title={pickButtonLabel}
                 >
