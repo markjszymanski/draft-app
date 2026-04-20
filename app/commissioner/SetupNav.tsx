@@ -3,9 +3,10 @@ import Link from 'next/link';
 const tabs = [
   { id: 'settings', href: '/commissioner/settings', label: 'Draft settings' },
   { id: 'players', href: '/commissioner/players', label: 'Players' },
+  { id: 'teams', href: '/commissioner/teams', label: 'Teams' },
 ] as const;
 
-export function SetupNav({ active }: { active: 'settings' | 'players' }) {
+export function SetupNav({ active }: { active: 'settings' | 'players' | 'teams' }) {
   return (
     <nav className="flex border-b border-neutral-800 mb-6 text-sm">
       {tabs.map((t) => (

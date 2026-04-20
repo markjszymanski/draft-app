@@ -25,6 +25,9 @@ export function DraftCompleteModal({
   const myPicks = team
     ? picks.filter((p) => p.team_id === team.id).sort((a, b) => a.pick_number - b.pick_number)
     : [];
+  const captain = team?.captain_player_id
+    ? playerById.get(team.captain_player_id) ?? null
+    : null;
 
   function buildShareText(): string {
     if (!team) return '';
@@ -32,6 +35,9 @@ export function DraftCompleteModal({
       `${team.name}${team.captain_name ? ` (${team.captain_name})` : ''} — ${draft.name} ${draft.year}`,
       '',
     ];
+    if (captain) {
+      lines.push(`${captain.position}  ${captain.first_name} ${captain.last_name}  (captain)`);
+    }
     for (const pick of myPicks) {
       const p = playerById.get(pick.player_id);
       if (!p) continue;
@@ -88,11 +94,31 @@ export function DraftCompleteModal({
             </div>
 
             <ul className="bg-neutral-950 rounded border border-neutral-800 divide-y divide-neutral-800">
+              {captain && (
+                <li className="px-3 py-2 flex items-center gap-3">
+                  <span className="text-xs font-semibold text-amber-400 w-4 text-center">C</span>
+                  <span
+                    className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+                      captain.position,
+                    )}`}
+                  >
+                    {positionBadge(captain.position)}
+                  </span>
+                  <span
+                    className={`flex-1 ${
+                      captain.gender === 'F' ? 'italic text-pink-300' : ''
+                    }`}
+                  >
+                    {captain.first_name} {captain.last_name}
+                  </span>
+                </li>
+              )}
               {myPicks.map((pick) => {
                 const p = playerById.get(pick.player_id);
                 if (!p) return null;
                 return (
                   <li key={pick.id} className="px-3 py-2 flex items-center gap-3">
+                    {captain && <span className="w-4" />}
                     <span
                       className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
                         p.position,

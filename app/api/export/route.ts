@@ -58,15 +58,30 @@ export async function GET(req: Request) {
     if (!session.teamId) {
       return NextResponse.json({ error: 'No team in session' }, { status: 400 });
     }
-    const scopedPicks = picks.filter((p) => p.team_id === session.teamId);
     const team = teamById.get(session.teamId);
     filenameSuffix = `_${team ? safeFilename(team.name) : 'team'}_results`;
-    csv = toCsv(scopedPicks.map((pick) => pickRow(pick, teamById, playerById, teamCount)));
+    const rows: Record<string, unknown>[] = [];
+    if (team) {
+      const capRow = captainRow(team, playerById);
+      if (capRow) rows.push(capRow);
+    }
+    for (const pick of picks.filter((p) => p.team_id === session.teamId)) {
+      rows.push(pickRow(pick, teamById, playerById, teamCount));
+    }
+    csv = toCsv(rows);
   } else if (scope === 'all') {
     if (!session.isCommissioner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    csv = toCsv(picks.map((pick) => pickRow(pick, teamById, playerById, teamCount)));
+    const rows: Record<string, unknown>[] = [];
+    for (const team of teams) {
+      const capRow = captainRow(team, playerById);
+      if (capRow) rows.push(capRow);
+      for (const pick of picks.filter((p) => p.team_id === team.id)) {
+        rows.push(pickRow(pick, teamById, playerById, teamCount));
+      }
+    }
+    csv = toCsv(rows);
   } else if (scope === 'teams') {
     if (!session.isCommissioner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -81,6 +96,16 @@ export async function GET(req: Request) {
         `${team.name}${team.captain_name ? ` (${team.captain_name})` : ''}`,
       );
       sections.push('Round,Pick,Position,Gender,First Name,Last Name,Points');
+      if (team.captain_player_id) {
+        const c = playerById.get(team.captain_player_id);
+        if (c) {
+          sections.push(
+            ['C', 'C', c.position, c.gender, c.first_name, c.last_name, c.point_value]
+              .map(csvCell)
+              .join(','),
+          );
+        }
+      }
       for (const pick of teamPicks) {
         const p = playerById.get(pick.player_id);
         const pickInRound = ((pick.pick_number - 1) % teamCount) + 1;
@@ -116,9 +141,30 @@ export async function GET(req: Request) {
   });
 }
 
+function captainRow(
+  team: { id: string; name: string; captain_name: string | null; captain_player_id: string | null },
+  playerById: Map<string, { first_name: string; last_name: string; position: string; gender: string; point_value: number }>,
+): Record<string, unknown> | null {
+  if (!team.captain_player_id) return null;
+  const captain = playerById.get(team.captain_player_id);
+  if (!captain) return null;
+  return {
+    round: 'C',
+    pick_in_round: 'C',
+    overall_pick: 'C',
+    team: team.name,
+    captain: team.captain_name ?? '',
+    first_name: captain.first_name,
+    last_name: captain.last_name,
+    position: captain.position,
+    gender: captain.gender,
+    points: captain.point_value,
+  };
+}
+
 function pickRow(
   pick: { pick_number: number; round: number; team_id: string; player_id: string },
-  teamById: Map<string, { name: string; captain_name: string | null }>,
+  teamById: Map<string, { name: string; captain_name: string | null; captain_player_id?: string | null }>,
   playerById: Map<string, { first_name: string; last_name: string; position: string; gender: string; point_value: number }>,
   teamCount: number,
 ): Record<string, unknown> {

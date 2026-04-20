@@ -6,6 +6,7 @@ type TeamRow = {
   id?: string;
   name: string;
   captain_name?: string | null;
+  captain_player_id?: string | null;
   passcode: string;
   draft_position: number;
 };
@@ -46,12 +47,22 @@ export async function PUT(req: Request) {
   // Validate
   const names = new Set<string>();
   const passcodes = new Set<string>();
+  const captainIds = new Set<string>();
   for (const t of body.teams) {
     if (!t.name?.trim() || !t.passcode?.trim()) {
       return NextResponse.json({ error: 'Every team needs a name and passcode.' }, { status: 400 });
     }
     if (passcodes.has(t.passcode.trim())) {
       return NextResponse.json({ error: 'Team passcodes must be unique.' }, { status: 400 });
+    }
+    if (t.captain_player_id) {
+      if (captainIds.has(t.captain_player_id)) {
+        return NextResponse.json(
+          { error: 'Each player can only be captain of one team.' },
+          { status: 400 },
+        );
+      }
+      captainIds.add(t.captain_player_id);
     }
     names.add(t.name.trim());
     passcodes.add(t.passcode.trim());
@@ -83,16 +94,35 @@ export async function PUT(req: Request) {
       .eq('id', t.id);
   }
 
+  // Look up captain names from the players table so captain_name stays in sync
+  // as a display cache.
+  const captainIdList = Array.from(captainIds);
+  const captainNameMap = new Map<string, string>();
+  if (captainIdList.length > 0) {
+    const { data: captainPlayers } = await auth.sb
+      .from('players')
+      .select('id, first_name, last_name')
+      .in('id', captainIdList);
+    for (const p of captainPlayers ?? []) {
+      captainNameMap.set(p.id, `${p.first_name} ${p.last_name}`);
+    }
+  }
+
   // Now apply final values, inserting new rows where no id present.
   for (let i = 0; i < body.teams.length; i++) {
     const t = body.teams[i];
     const draftPosition = i + 1;
+    const captainName = t.captain_player_id
+      ? captainNameMap.get(t.captain_player_id) ?? t.captain_name?.trim() ?? null
+      : t.captain_name?.trim() || null;
+    const captainPlayerId = t.captain_player_id ?? null;
     if (t.id) {
       const { error } = await auth.sb
         .from('teams')
         .update({
           name: t.name.trim(),
-          captain_name: t.captain_name?.trim() || null,
+          captain_name: captainName,
+          captain_player_id: captainPlayerId,
           passcode: t.passcode.trim(),
           draft_position: draftPosition,
         })
@@ -102,7 +132,8 @@ export async function PUT(req: Request) {
       const { error } = await auth.sb.from('teams').insert({
         draft_id: auth.draftId,
         name: t.name.trim(),
-        captain_name: t.captain_name?.trim() || null,
+        captain_name: captainName,
+        captain_player_id: captainPlayerId,
         passcode: t.passcode.trim(),
         draft_position: draftPosition,
       });

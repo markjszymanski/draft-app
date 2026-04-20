@@ -29,6 +29,8 @@ create table teams (
   draft_id uuid not null references drafts(id) on delete cascade,
   name text not null,
   captain_name text,
+  -- Canonical captain reference. The captain is also a row in `players`.
+  captain_player_id uuid,
   draft_position int not null,
   passcode text not null,
   created_at timestamptz not null default now(),
@@ -85,6 +87,15 @@ create index picks_draft_idx on picks(draft_id, pick_number);
 alter table players
   add column claim_originator_pick_id uuid references picks(id) on delete set null;
 create index players_claim_originator_idx on players(claim_originator_pick_id);
+
+-- Captain FK (forward reference from teams → players).
+alter table teams
+  add constraint teams_captain_player_fk
+  foreign key (captain_player_id) references players(id) on delete set null;
+create index teams_captain_player_idx on teams(captain_player_id);
+create unique index teams_captain_unique_per_draft
+  on teams(draft_id, captain_player_id)
+  where captain_player_id is not null;
 
 -- Team-private favorites (stars) on players.
 create table team_starred_players (

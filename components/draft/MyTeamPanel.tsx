@@ -29,6 +29,7 @@ export function MyTeamPanel({
   const myPicks = picks
     .filter((p) => p.team_id === team.id)
     .sort((a, b) => a.pick_number - b.pick_number);
+  const captain = team.captain_player_id ? playerById.get(team.captain_player_id) ?? null : null;
   const used = teamCapUsed(team.id, picks, players);
   const counts = rosterCounts(team.id, picks, players);
   const pct = Math.min(100, Math.round((used / cap) * 100));
@@ -68,10 +69,34 @@ export function MyTeamPanel({
 
       <section>
         <h3 className="text-xs uppercase tracking-wider text-neutral-500 mb-2">Roster</h3>
-        {myPicks.length === 0 ? (
+        {!captain && myPicks.length === 0 ? (
           <p className="text-sm text-neutral-500">No picks yet.</p>
         ) : (
           <ul className="divide-y divide-neutral-900">
+            {captain && (
+              <li className="py-2 flex items-center gap-3">
+                <span className="text-xs font-semibold text-amber-400 tabular-nums w-12 text-center">
+                  C
+                </span>
+                <span
+                  className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+                    captain.position,
+                  )}`}
+                >
+                  {positionBadge(captain.position)}
+                </span>
+                <span
+                  className={`flex-1 truncate ${
+                    captain.gender === 'F' ? 'italic text-pink-300' : ''
+                  }`}
+                >
+                  {captain.first_name} {captain.last_name}
+                </span>
+                <span className="text-sm tabular-nums text-neutral-300">
+                  {fmtPoints(captain.point_value)}
+                </span>
+              </li>
+            )}
             {myPicks.map((pick) => {
               const player = playerById.get(pick.player_id);
               if (!player) return null;

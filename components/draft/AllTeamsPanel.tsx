@@ -84,40 +84,70 @@ export function AllTeamsPanel({
 
             {isOpen && (
               <div className="border-t border-neutral-800 px-3 py-2">
-                {myPicks.length === 0 ? (
-                  <p className="text-sm text-neutral-500 py-1">No picks yet.</p>
-                ) : (
-                  <ul className="divide-y divide-neutral-800">
-                    {myPicks.map((pick) => {
-                      const player = playerById.get(pick.player_id);
-                      if (!player) return null;
-                      return (
-                        <li key={pick.id} className="py-1.5 flex items-center gap-3 text-sm">
-                          <span className="text-xs text-neutral-500 tabular-nums w-12">
-                            {pick.round}.{(((pick.pick_number - 1) % teamCount) + 1).toString().padStart(2, '0')}
+                {(() => {
+                  const captain = team.captain_player_id
+                    ? playerById.get(team.captain_player_id) ?? null
+                    : null;
+                  if (!captain && myPicks.length === 0) {
+                    return <p className="text-sm text-neutral-500 py-1">No picks yet.</p>;
+                  }
+                  return (
+                    <ul className="divide-y divide-neutral-800">
+                      {captain && (
+                        <li className="py-1.5 flex items-center gap-3 text-sm">
+                          <span className="text-xs font-semibold text-amber-400 tabular-nums w-12 text-center">
+                            C
                           </span>
                           <span
                             className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
-                              player.position,
+                              captain.position,
                             )}`}
                           >
-                            {positionBadge(player.position)}
+                            {positionBadge(captain.position)}
                           </span>
                           <span
                             className={`flex-1 truncate ${
-                              player.gender === 'F' ? 'italic text-pink-300' : ''
+                              captain.gender === 'F' ? 'italic text-pink-300' : ''
                             }`}
                           >
-                            {player.first_name} {player.last_name}
+                            {captain.first_name} {captain.last_name}
                           </span>
                           <span className="text-xs tabular-nums text-neutral-400">
-                            {player.point_value}
+                            {captain.point_value}
                           </span>
                         </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                      )}
+                      {myPicks.map((pick) => {
+                        const player = playerById.get(pick.player_id);
+                        if (!player) return null;
+                        return (
+                          <li key={pick.id} className="py-1.5 flex items-center gap-3 text-sm">
+                            <span className="text-xs text-neutral-500 tabular-nums w-12">
+                              {pick.round}.{(((pick.pick_number - 1) % teamCount) + 1).toString().padStart(2, '0')}
+                            </span>
+                            <span
+                              className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+                                player.position,
+                              )}`}
+                            >
+                              {positionBadge(player.position)}
+                            </span>
+                            <span
+                              className={`flex-1 truncate ${
+                                player.gender === 'F' ? 'italic text-pink-300' : ''
+                              }`}
+                            >
+                              {player.first_name} {player.last_name}
+                            </span>
+                            <span className="text-xs tabular-nums text-neutral-400">
+                              {player.point_value}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                })()}
               </div>
             )}
           </div>

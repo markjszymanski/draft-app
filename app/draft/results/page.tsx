@@ -63,41 +63,65 @@ export default async function ResultsPage() {
                     )}
                   </h2>
                   <p className="text-xs text-neutral-600">
-                    {counts.total} players · F{counts.F} D{counts.D} G{counts.G} ·{' '}
+                    {counts.total} players · F{counts.F} D{counts.D} F/D{counts.FD} G{counts.G} ·{' '}
                     M{counts.M} W{counts.W} · {fmtPoints(used)} / {fmtPoints(draft.salary_cap)} pts
                   </p>
                 </header>
-                {teamPicks.length === 0 ? (
-                  <p className="text-sm text-neutral-500">No picks.</p>
-                ) : (
-                  <ol className="text-sm space-y-0.5">
-                    {teamPicks.map((pick) => {
-                      const p = playerById.get(pick.player_id);
-                      if (!p) return null;
-                      const pickInRound = ((pick.pick_number - 1) % teamCount) + 1;
-                      return (
-                        <li key={pick.id} className="flex items-center gap-2">
-                          <span className="text-xs text-neutral-500 tabular-nums w-10">
-                            {pick.round}.{pickInRound.toString().padStart(2, '0')}
+                {(() => {
+                  const captain = team.captain_player_id
+                    ? playerById.get(team.captain_player_id) ?? null
+                    : null;
+                  if (!captain && teamPicks.length === 0) {
+                    return <p className="text-sm text-neutral-500">No picks.</p>;
+                  }
+                  return (
+                    <ol className="text-sm space-y-0.5">
+                      {captain && (
+                        <li className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-neutral-700 tabular-nums w-10 text-center">
+                            C
                           </span>
-                          <span className="font-bold w-5 text-center text-xs">
-                            {p.position}
+                          <span className="font-bold w-8 text-center text-xs">
+                            {captain.position === 'FD' ? 'F/D' : captain.position}
                           </span>
                           <span
-                            className={`flex-1 ${
-                              p.gender === 'F' ? 'italic' : ''
-                            }`}
+                            className={`flex-1 ${captain.gender === 'F' ? 'italic' : ''}`}
                           >
-                            {p.first_name} {p.last_name}
+                            {captain.first_name} {captain.last_name}
                           </span>
                           <span className="tabular-nums text-xs text-neutral-500">
-                            {fmtPoints(p.point_value)}
+                            {fmtPoints(captain.point_value)}
                           </span>
                         </li>
-                      );
-                    })}
-                  </ol>
-                )}
+                      )}
+                      {teamPicks.map((pick) => {
+                        const p = playerById.get(pick.player_id);
+                        if (!p) return null;
+                        const pickInRound = ((pick.pick_number - 1) % teamCount) + 1;
+                        return (
+                          <li key={pick.id} className="flex items-center gap-2">
+                            <span className="text-xs text-neutral-500 tabular-nums w-10">
+                              {pick.round}.{pickInRound.toString().padStart(2, '0')}
+                            </span>
+                            <span className="font-bold w-8 text-center text-xs">
+                              {p.position === 'FD' ? 'F/D' : p.position}
+                            </span>
+                            <span
+                              className={`flex-1 ${
+                                p.gender === 'F' ? 'italic' : ''
+                              }`}
+                            >
+                              {p.first_name} {p.last_name}
+                            </span>
+                            <span className="tabular-nums text-xs text-neutral-500">
+                              {fmtPoints(p.point_value)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  );
+                })()}
               </section>
             );
           })}

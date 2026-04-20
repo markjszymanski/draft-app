@@ -24,6 +24,7 @@ export type Team = {
   draft_id: string;
   name: string;
   captain_name: string | null;
+  captain_player_id: string | null;
   draft_position: number;
   passcode: string;
   created_at: string;

@@ -76,6 +76,13 @@ export function HeaderMenu({ status }: { status: string }) {
               >
                 Players
               </Link>
+              <Link
+                href="/commissioner/teams"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 hover:bg-neutral-800"
+              >
+                Teams
+              </Link>
             </>
           )}
           <button

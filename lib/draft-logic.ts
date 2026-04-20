@@ -44,19 +44,17 @@ export function buildFullSchedule(
 
 export function teamCapUsed(
   teamId: string,
-  picks: DraftPick[],
+  _picks: DraftPick[],
   players: Pick<Player, 'id' | 'point_value' | 'drafted_by_team_id' | 'reserved_for_team_id'>[],
 ): number {
-  const playerById = new Map(players.map((p) => [p.id, p]));
-  // Drafted picks count
-  const drafted = picks
-    .filter((p) => p.team_id === teamId)
-    .reduce((sum, p) => sum + (playerById.get(p.player_id)?.point_value ?? 0), 0);
-  // Claimed (reserved-but-not-drafted) players also count — they belong to this team.
-  const claimed = players
-    .filter((p) => p.reserved_for_team_id === teamId && !p.drafted_by_team_id)
-    .reduce((sum, p) => sum + p.point_value, 0);
-  return drafted + claimed;
+  // Anyone drafted by the team — including pre-draft captains (no pick row) —
+  // counts against the cap. Claimed (package-reserved) players also count.
+  let total = 0;
+  for (const p of players) {
+    if (p.drafted_by_team_id === teamId) total += p.point_value;
+    else if (p.reserved_for_team_id === teamId) total += p.point_value;
+  }
+  return total;
 }
 
 export function wouldExceedCap(
@@ -79,15 +77,12 @@ export type RosterCounts = {
 
 export function rosterCounts(
   teamId: string,
-  picks: DraftPick[],
-  players: Pick<Player, 'id' | 'position' | 'gender'>[],
+  _picks: DraftPick[],
+  players: Pick<Player, 'id' | 'position' | 'gender' | 'drafted_by_team_id'>[],
 ): RosterCounts {
-  const playerById = new Map(players.map((p) => [p.id, p]));
   const counts: RosterCounts = { F: 0, D: 0, G: 0, FD: 0, M: 0, W: 0, total: 0 };
-  for (const pick of picks) {
-    if (pick.team_id !== teamId) continue;
-    const pl = playerById.get(pick.player_id);
-    if (!pl) continue;
+  for (const pl of players) {
+    if (pl.drafted_by_team_id !== teamId) continue;
     counts[pl.position] += 1;
     if (pl.gender === 'F') counts.W += 1;
     else counts.M += 1;

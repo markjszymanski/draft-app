@@ -156,39 +156,72 @@ export function WatchView({ draftId }: { draftId: string }) {
               </div>
 
               <ul className="mt-2 text-xs space-y-0.5 overflow-hidden">
-                {teamPicks.map((pick) => {
-                  const player = playerById.get(pick.player_id);
-                  if (!player) return null;
-                  const pickInRound = ((pick.pick_number - 1) % teamCount) + 1;
-                  const label = `${pick.round}.${pickInRound.toString().padStart(2, '0')}`;
-                  return (
-                    <li key={pick.id} className="flex items-center gap-1.5 truncate">
-                      <span className="text-[10px] tabular-nums text-neutral-500 w-9 shrink-0">
-                        {label}
-                      </span>
-                      <span
-                        className={`px-1 rounded text-[10px] font-bold ${positionBadgeClass(
-                          player.position,
-                        )}`}
-                      >
-                        {positionBadge(player.position)}
-                      </span>
-                      <span
-                        className={`truncate ${
-                          player.gender === 'F' ? 'italic text-pink-300' : ''
-                        }`}
-                      >
-                        {player.first_name[0]}. {player.last_name}
-                      </span>
-                      <span className="ml-auto tabular-nums text-neutral-500">
-                        {player.point_value}
-                      </span>
-                    </li>
-                  );
-                })}
-                {teamPicks.length === 0 && (
-                  <li className="text-neutral-600">No picks yet</li>
-                )}
+                {(() => {
+                  const captain = team.captain_player_id
+                    ? playerById.get(team.captain_player_id) ?? null
+                    : null;
+                  const rows: React.ReactNode[] = [];
+                  if (captain) {
+                    rows.push(
+                      <li key={`captain-${captain.id}`} className="flex items-center gap-1.5 truncate">
+                        <span className="text-[10px] font-semibold text-amber-400 tabular-nums w-9 shrink-0 text-center">
+                          C
+                        </span>
+                        <span
+                          className={`px-1 rounded text-[10px] font-bold ${positionBadgeClass(
+                            captain.position,
+                          )}`}
+                        >
+                          {positionBadge(captain.position)}
+                        </span>
+                        <span
+                          className={`truncate ${
+                            captain.gender === 'F' ? 'italic text-pink-300' : ''
+                          }`}
+                        >
+                          {captain.first_name[0]}. {captain.last_name}
+                        </span>
+                        <span className="ml-auto tabular-nums text-neutral-500">
+                          {captain.point_value}
+                        </span>
+                      </li>,
+                    );
+                  }
+                  for (const pick of teamPicks) {
+                    const player = playerById.get(pick.player_id);
+                    if (!player) continue;
+                    const pickInRound = ((pick.pick_number - 1) % teamCount) + 1;
+                    const label = `${pick.round}.${pickInRound.toString().padStart(2, '0')}`;
+                    rows.push(
+                      <li key={pick.id} className="flex items-center gap-1.5 truncate">
+                        <span className="text-[10px] tabular-nums text-neutral-500 w-9 shrink-0">
+                          {label}
+                        </span>
+                        <span
+                          className={`px-1 rounded text-[10px] font-bold ${positionBadgeClass(
+                            player.position,
+                          )}`}
+                        >
+                          {positionBadge(player.position)}
+                        </span>
+                        <span
+                          className={`truncate ${
+                            player.gender === 'F' ? 'italic text-pink-300' : ''
+                          }`}
+                        >
+                          {player.first_name[0]}. {player.last_name}
+                        </span>
+                        <span className="ml-auto tabular-nums text-neutral-500">
+                          {player.point_value}
+                        </span>
+                      </li>,
+                    );
+                  }
+                  if (rows.length === 0) {
+                    rows.push(<li key="empty" className="text-neutral-600">No picks yet</li>);
+                  }
+                  return rows;
+                })()}
               </ul>
             </div>
           );
