@@ -179,7 +179,7 @@ export function WatchView({ draftId }: { draftId: string }) {
                             captain.gender === 'F' ? 'italic text-pink-300' : ''
                           }`}
                         >
-                          {captain.first_name[0]}. {captain.last_name}
+                          {captain.first_name} {captain.last_name}
                         </span>
                         <span className="ml-auto tabular-nums text-neutral-500">
                           {captain.point_value}
@@ -209,7 +209,7 @@ export function WatchView({ draftId }: { draftId: string }) {
                             player.gender === 'F' ? 'italic text-pink-300' : ''
                           }`}
                         >
-                          {player.first_name[0]}. {player.last_name}
+                          {player.first_name} {player.last_name}
                         </span>
                         <span className="ml-auto tabular-nums text-neutral-500">
                           {player.point_value}
