@@ -150,6 +150,12 @@ export function ManagePlayers({
 
   return (
     <div className="space-y-8">
+      <PackagesPanel
+        players={players}
+        packages={packages}
+        packageLabelById={packageLabelById}
+        onChanged={refresh}
+      />
       <TestGenerator
         onGenerated={() => refresh()}
       />
@@ -540,6 +546,145 @@ function TestGenerator({ onGenerated }: { onGenerated: () => void }) {
           <p className={`text-sm ${msg.startsWith('Error') ? 'text-rose-400' : 'text-emerald-300'}`}>
             {msg}
           </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
+// Groups players by package and shows one card per package with remove/dissolve
+// controls. Hidden when there are zero packages.
+function PackagesPanel({
+  players,
+  packages,
+  packageLabelById,
+  onChanged,
+}: {
+  players: Player[];
+  packages: Package[];
+  packageLabelById: Map<string, string>;
+  onChanged: () => void;
+}) {
+  const grouped = useMemo(() => {
+    const byId = new Map<string, Player[]>();
+    for (const p of players) {
+      if (!p.package_id) continue;
+      if (!byId.has(p.package_id)) byId.set(p.package_id, []);
+      byId.get(p.package_id)!.push(p);
+    }
+    // Sort members within each package by points desc
+    for (const members of byId.values()) {
+      members.sort((a, b) => b.point_value - a.point_value);
+    }
+    // Sort packages by label
+    return Array.from(byId.entries())
+      .map(([id, members]) => ({
+        id,
+        label: packageLabelById.get(id) ?? 'package',
+        members,
+        total: members.reduce((s, m) => s + m.point_value, 0),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [players, packages, packageLabelById]);
+
+  const freeCount = players.filter((p) => !p.package_id).length;
+
+  async function dissolve(pkgId: string, label: string) {
+    if (!confirm(`Dissolve package "${label}"? All members become unpackaged.`)) return;
+    const res = await fetch(`/api/packages?id=${pkgId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      alert(json.error ?? 'Failed to dissolve');
+      return;
+    }
+    onChanged();
+  }
+
+  async function removeMember(playerId: string, playerName: string, label: string) {
+    if (!confirm(`Remove ${playerName} from package "${label}"?`)) return;
+    const res = await fetch('/api/packages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerIds: [playerId], label: null }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      alert(json.error ?? 'Failed to remove');
+      return;
+    }
+    onChanged();
+  }
+
+  return (
+    <details className="rounded-lg border border-neutral-800 bg-neutral-900/50" open>
+      <summary className="cursor-pointer px-4 py-3 text-sm text-neutral-300 hover:text-neutral-100 font-semibold flex items-center justify-between">
+        <span>
+          Packages ({grouped.length})
+          {grouped.length > 0 && (
+            <span className="text-neutral-500 font-normal">
+              {' '}
+              · {players.length - freeCount} players grouped · {freeCount} free agents
+            </span>
+          )}
+        </span>
+      </summary>
+      <div className="p-4 border-t border-neutral-800 space-y-3">
+        {grouped.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            No packages yet. Use the Package button on a player row to group people together.
+          </p>
+        ) : (
+          grouped.map((pkg) => (
+            <div
+              key={pkg.id}
+              className="rounded border border-neutral-800 bg-neutral-950"
+            >
+              <header className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xs text-neutral-500">👥</span>
+                  <span className="font-semibold text-violet-300">{pkg.label}</span>
+                  <span className="text-xs text-neutral-500">({pkg.members.length})</span>
+                  <span className="text-xs text-neutral-500">· {pkg.total} pts</span>
+                </div>
+                <button
+                  onClick={() => dissolve(pkg.id, pkg.label)}
+                  className="text-xs text-rose-400 hover:text-rose-300 font-semibold"
+                >
+                  Dissolve
+                </button>
+              </header>
+              <ul className="divide-y divide-neutral-900">
+                {pkg.members.map((m) => (
+                  <li key={m.id} className="flex items-center gap-3 px-3 py-1.5 text-sm">
+                    <span
+                      className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+                        m.position,
+                      )}`}
+                    >
+                      {positionBadge(m.position)}
+                    </span>
+                    <span
+                      className={`flex-1 truncate ${
+                        m.gender === 'F' ? 'italic text-pink-300' : ''
+                      }`}
+                    >
+                      {m.first_name} {m.last_name}
+                    </span>
+                    <span className="tabular-nums text-neutral-300 w-14 text-right">
+                      {m.point_value}
+                    </span>
+                    <button
+                      onClick={() => removeMember(m.id, `${m.first_name} ${m.last_name}`, pkg.label)}
+                      className="text-xs text-neutral-500 hover:text-rose-400"
+                      title="Remove from package"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </div>
     </details>

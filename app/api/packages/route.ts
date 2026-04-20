@@ -96,3 +96,29 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, packageId: newPackageId });
 }
+
+// Dissolve a package: clear every member's package_id, then delete the package row.
+export async function DELETE(req: Request) {
+  const auth = await requireSetupCommissioner();
+  if ('error' in auth) return auth.error;
+  const url = new URL(req.url);
+  const packageId = url.searchParams.get('id');
+  if (!packageId) {
+    return NextResponse.json({ error: 'package id required' }, { status: 400 });
+  }
+  // Verify the package belongs to this draft.
+  const { data: pkg } = await auth.sb
+    .from('packages')
+    .select('id, draft_id')
+    .eq('id', packageId)
+    .maybeSingle();
+  if (!pkg || pkg.draft_id !== auth.draftId) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  await auth.sb
+    .from('players')
+    .update({ package_id: null })
+    .eq('package_id', packageId);
+  await auth.sb.from('packages').delete().eq('id', packageId);
+  return NextResponse.json({ ok: true });
+}

@@ -45,3 +45,8 @@ next-env.d.ts
 /mockups
 /scripts/mockup-seed.mjs
 /scripts/mockup-screenshot.mjs
+
+# local-only: draft-specific private data (signup exports, player imports)
+/scripts/imports/
+/scripts/xlsx-probe.mjs
+/scripts/build-player-import.mjs
