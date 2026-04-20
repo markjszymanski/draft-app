@@ -239,27 +239,19 @@ export function PlayerBoard({
                 {positionBadge(p.position)}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="truncate flex items-center gap-1.5 flex-wrap">
+                <p className="truncate">
                   <span className={p.gender === 'F' ? 'italic text-pink-300' : ''}>
                     {p.first_name} {p.last_name}
                   </span>
-                  {packageMates.length > 0 && (
-                    <span
-                      className="text-xs text-neutral-300 bg-neutral-800 rounded px-1.5 py-0.5 shrink-0"
-                      title={`Package — drafting reserves: ${packageMates
-                        .map((m) => `${m.first_name} ${m.last_name}`)
-                        .join(', ')}`}
-                    >
-                      <span className="sm:hidden">👥 +{packageMates.length}</span>
-                      <span className="hidden sm:inline">
-                        👥 +{' '}
-                        {packageMates
-                          .map((m) => `${m.first_name} ${m.last_name}`)
-                          .join(', ')}
-                      </span>
-                    </span>
-                  )}
                 </p>
+                {packageMates.length > 0 && (
+                  <p className="text-xs text-neutral-400 truncate">
+                    👥{' '}
+                    {packageMates
+                      .map((m) => `${m.first_name} ${m.last_name}`)
+                      .join(', ')}
+                  </p>
+                )}
                 {ownerTeam ? (
                   <p className="text-xs text-neutral-500 truncate">
                     Drafted by {ownerTeam.name}
