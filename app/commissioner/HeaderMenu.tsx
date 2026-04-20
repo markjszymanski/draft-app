@@ -42,7 +42,7 @@ export function HeaderMenu({ status }: { status: string }) {
       alert(json.error ?? 'Could not start a new draft.');
       return;
     }
-    router.push('/commissioner/setup');
+    router.push('/commissioner/settings');
     router.refresh();
   }
 

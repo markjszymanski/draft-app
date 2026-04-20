@@ -9,7 +9,7 @@ import type { Player, Team } from '@/lib/supabase/types';
 export default async function TeamsPage() {
   const session = await getSession();
   if (!session?.isCommissioner) redirect('/commissioner/login');
-  if (session.draftId === 'pending') redirect('/commissioner/setup');
+  if (session.draftId === 'pending') redirect('/commissioner/login');
 
   const sb = createServiceClient();
   const { data: draft } = await sb
@@ -17,7 +17,7 @@ export default async function TeamsPage() {
     .select('id, name, status')
     .eq('id', session.draftId)
     .single();
-  if (!draft) redirect('/commissioner/setup');
+  if (!draft) redirect('/commissioner/login');
 
   const [{ data: teams }, { data: players }] = await Promise.all([
     sb.from('teams').select('*').eq('draft_id', draft.id).order('draft_position'),

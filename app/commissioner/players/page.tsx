@@ -9,11 +9,11 @@ import type { Package, Player } from '@/lib/supabase/types';
 export default async function PlayersPage() {
   const session = await getSession();
   if (!session?.isCommissioner) redirect('/commissioner/login');
-  if (session.draftId === 'pending') redirect('/commissioner/setup');
+  if (session.draftId === 'pending') redirect('/commissioner/login');
 
   const sb = createServiceClient();
   const { data: draft } = await sb.from('drafts').select('id, name, status').eq('id', session.draftId).single();
-  if (!draft) redirect('/commissioner/setup');
+  if (!draft) redirect('/commissioner/login');
 
   const [{ data: players }, { data: packages }] = await Promise.all([
     sb

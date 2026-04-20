@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { setSession } from '@/lib/auth';
 
+function genPasscode(len = 7): string {
+  return Array.from({ length: len }, () =>
+    'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)],
+  ).join('');
+}
+
+// Create a new draft with sensible defaults. The commissioner then edits
+// everything on the Draft Settings / Players / Teams tabs.
 export async function POST() {
   const sb = createServiceClient();
 
@@ -24,6 +32,29 @@ export async function POST() {
     );
   }
 
-  await setSession({ draftId: 'pending', isCommissioner: true });
-  return NextResponse.json({ ok: true });
+  const { data: draft, error } = await sb
+    .from('drafts')
+    .insert({
+      name: 'New draft',
+      year: new Date().getFullYear(),
+      salary_cap: 10000,
+      pick_timer_seconds: 120,
+      draft_mode: 'snake',
+      roster_size: 0,
+      status: 'setup',
+      current_pick_number: 1,
+      commissioner_passcode: genPasscode(),
+    })
+    .select('id')
+    .single();
+
+  if (error || !draft) {
+    return NextResponse.json(
+      { error: error?.message ?? 'Failed to create draft' },
+      { status: 500 },
+    );
+  }
+
+  await setSession({ draftId: draft.id, isCommissioner: true });
+  return NextResponse.json({ ok: true, draftId: draft.id });
 }

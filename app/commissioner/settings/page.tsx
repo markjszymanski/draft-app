@@ -8,11 +8,11 @@ import { SetupNav } from '../SetupNav';
 export default async function SettingsPage() {
   const session = await getSession();
   if (!session?.isCommissioner) redirect('/commissioner/login');
-  if (session.draftId === 'pending') redirect('/commissioner/setup');
+  if (session.draftId === 'pending') redirect('/commissioner/login');
 
   const sb = createServiceClient();
   const { data: draft } = await sb.from('drafts').select('*').eq('id', session.draftId).single();
-  if (!draft) redirect('/commissioner/setup');
+  if (!draft) redirect('/commissioner/login');
 
   return (
     <main className="flex-1 p-6 max-w-4xl mx-auto w-full">
