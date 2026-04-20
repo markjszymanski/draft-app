@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Player, Team } from '@/lib/supabase/types';
-import { fmtPoints } from '@/lib/utils';
+import { fmtPoints, positionBadge, positionBadgeClass } from '@/lib/utils';
 
 type TeamRow = {
   id?: string;
@@ -251,6 +251,7 @@ function CaptainPicker({
 }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
 
   const selected = selectedId ? players.find((p) => p.id === selectedId) : null;
 
@@ -268,12 +269,44 @@ function CaptainPicker({
       .slice(0, 8);
   }, [players, query, excludedIds]);
 
+  // Reset highlight when matches change so a newly-typed query starts at the top.
+  useEffect(() => {
+    setHighlight(0);
+  }, [matches]);
+
+  function commit(p: Player) {
+    onChange(p.id);
+    setQuery('');
+    setOpen(false);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || matches.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlight((h) => Math.min(h + 1, matches.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const pick = matches[highlight];
+      if (pick) commit(pick);
+    } else if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  }
+
   if (selected) {
     return (
       <div className="flex items-center gap-2">
         <div className="flex-1 rounded-md bg-neutral-900 border border-neutral-800 px-3 py-2 flex items-center gap-2">
-          <span className="text-[10px] font-bold bg-neutral-800 text-neutral-200 rounded px-1">
-            {selected.position === 'FD' ? 'F/D' : selected.position}
+          <span
+            className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+              selected.position,
+            )}`}
+          >
+            {positionBadge(selected.position)}
           </span>
           <span
             className={`flex-1 truncate ${
@@ -312,21 +345,26 @@ function CaptainPicker({
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={onKeyDown}
       />
       {open && matches.length > 0 && (
         <ul className="absolute z-10 top-full mt-1 left-0 right-0 rounded-md border border-neutral-800 bg-neutral-900 shadow-lg max-h-60 overflow-auto">
-          {matches.map((p) => (
+          {matches.map((p, idx) => (
             <li
               key={p.id}
-              onClick={() => {
-                onChange(p.id);
-                setQuery('');
-                setOpen(false);
-              }}
-              className="px-3 py-2 hover:bg-neutral-800 cursor-pointer flex items-center gap-2 text-sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setHighlight(idx)}
+              onClick={() => commit(p)}
+              className={`px-3 py-2 cursor-pointer flex items-center gap-2 text-sm ${
+                idx === highlight ? 'bg-neutral-800' : 'hover:bg-neutral-800'
+              }`}
             >
-              <span className="text-[10px] font-bold bg-neutral-800 text-neutral-200 rounded px-1">
-                {p.position === 'FD' ? 'F/D' : p.position}
+              <span
+                className={`w-9 text-center text-xs font-bold rounded ${positionBadgeClass(
+                  p.position,
+                )}`}
+              >
+                {positionBadge(p.position)}
               </span>
               <span
                 className={`flex-1 ${p.gender === 'F' ? 'italic text-pink-300' : ''}`}
