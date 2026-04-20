@@ -348,7 +348,7 @@ function PlayerForm({
   const [points, setPoints] = useState<number>(initial.point_value);
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_4rem_4rem_5rem_auto_auto] gap-2 items-center">
+    <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_4rem_4rem_5rem_auto_auto] gap-2 items-center">
       <input
         className={inputCls}
         placeholder="First"

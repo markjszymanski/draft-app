@@ -50,7 +50,7 @@ export function SettingsForm({ draft }: { draft: Draft }) {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="flex flex-col gap-1">
             <span className="text-xs text-neutral-400">Name</span>
             <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} />

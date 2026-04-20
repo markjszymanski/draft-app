@@ -27,7 +27,7 @@ export function ResolveClaimModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-neutral-900 border border-violet-500/40 rounded-t-lg sm:rounded-lg w-full max-w-md p-6 space-y-4">
+      <div className="bg-neutral-900 border border-violet-500/40 rounded-t-lg sm:rounded-lg w-full max-w-md p-4 sm:p-6 space-y-4">
         <header className="space-y-1">
           <p className="text-violet-300 text-xs uppercase tracking-widest">On hold</p>
           <h2 className="text-xl font-bold">

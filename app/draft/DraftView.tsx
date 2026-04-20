@@ -239,28 +239,46 @@ export function DraftView({
         </div>
       )}
 
-      <nav className="flex border-b border-neutral-800 text-sm">
-        {(['board', 'team', 'teams', 'order'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-3 transition-colors ${
-              tab === t
-                ? 'bg-neutral-900 text-neutral-100 border-b-2 border-emerald-500'
-                : 'text-neutral-400 hover:text-neutral-100'
-            }`}
-          >
-            {t === 'board'
-              ? `Available Players (${players.filter((p) => !p.drafted_by_team_id && !p.reserved_for_team_id).length})`
+      <nav className="flex border-b border-neutral-800 text-xs sm:text-sm">
+        {(['board', 'team', 'teams', 'order'] as Tab[]).map((t) => {
+          const availableCount = players.filter(
+            (p) => !p.drafted_by_team_id && !p.reserved_for_team_id,
+          ).length;
+          const short =
+            t === 'board'
+              ? `Board (${availableCount})`
+              : t === 'team'
+              ? isCommissioner
+                ? 'Current'
+                : 'My Team'
+              : t === 'teams'
+              ? 'All Teams'
+              : 'Order';
+          const long =
+            t === 'board'
+              ? `Available Players (${availableCount})`
               : t === 'team'
               ? isCommissioner
                 ? 'Current Team'
                 : 'My Team'
               : t === 'teams'
               ? 'All Teams'
-              : 'Draft Order'}
-          </button>
-        ))}
+              : 'Draft Order';
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 py-3 transition-colors ${
+                tab === t
+                  ? 'bg-neutral-900 text-neutral-100 border-b-2 border-emerald-500'
+                  : 'text-neutral-400 hover:text-neutral-100'
+              }`}
+            >
+              <span className="sm:hidden">{short}</span>
+              <span className="hidden sm:inline">{long}</span>
+            </button>
+          );
+        })}
       </nav>
 
       <div className="flex-1 overflow-auto">

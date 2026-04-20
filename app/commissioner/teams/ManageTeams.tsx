@@ -170,9 +170,37 @@ export function ManageTeams({
           {teamRows.map((t, i) => (
             <div
               key={t.id ?? `new-${i}`}
-              className="grid grid-cols-[2rem_1fr_1.5fr_7rem_auto] gap-2 items-center"
+              className="border border-neutral-800 rounded p-3 sm:border-0 sm:p-0 sm:grid sm:grid-cols-[2rem_1fr_1.5fr_7rem_auto] sm:gap-2 sm:items-center space-y-2 sm:space-y-0"
             >
-              <span className="text-neutral-400 text-sm tabular-nums">#{i + 1}</span>
+              <div className="flex items-center justify-between sm:contents">
+                <span className="text-neutral-400 text-sm tabular-nums">#{i + 1}</span>
+                <div className="flex gap-1 sm:order-last">
+                  <button
+                    type="button"
+                    onClick={() => moveTeam(i, -1)}
+                    className="px-2 text-neutral-400 hover:text-neutral-100"
+                    aria-label="Move up"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveTeam(i, 1)}
+                    className="px-2 text-neutral-400 hover:text-neutral-100"
+                    aria-label="Move down"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeTeam(i)}
+                    className="px-2 text-rose-400 hover:text-rose-300"
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
               <input
                 className={inputCls}
                 placeholder="Team name"
@@ -191,32 +219,6 @@ export function ManageTeams({
                 value={t.passcode}
                 onChange={(e) => updateTeam(i, { passcode: e.target.value })}
               />
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveTeam(i, -1)}
-                  className="px-2 text-neutral-400 hover:text-neutral-100"
-                  aria-label="Move up"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveTeam(i, 1)}
-                  className="px-2 text-neutral-400 hover:text-neutral-100"
-                  aria-label="Move down"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeTeam(i)}
-                  className="px-2 text-rose-400 hover:text-rose-300"
-                  aria-label="Remove"
-                >
-                  ×
-                </button>
-              </div>
             </div>
           ))}
         </div>

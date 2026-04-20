@@ -59,7 +59,7 @@ export function ConfirmPickModal({
       onClick={onCancel}
     >
       <div
-        className="bg-neutral-900 border border-neutral-800 rounded-t-lg sm:rounded-lg w-full max-w-md p-6 space-y-4"
+        className="bg-neutral-900 border border-neutral-800 rounded-t-lg sm:rounded-lg w-full max-w-md p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <header>

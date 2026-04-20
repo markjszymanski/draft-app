@@ -250,10 +250,13 @@ export function PlayerBoard({
                         .map((m) => `${m.first_name} ${m.last_name}`)
                         .join(', ')}`}
                     >
-                      👥 +{' '}
-                      {packageMates
-                        .map((m) => `${m.first_name} ${m.last_name}`)
-                        .join(', ')}
+                      <span className="sm:hidden">👥 +{packageMates.length}</span>
+                      <span className="hidden sm:inline">
+                        👥 +{' '}
+                        {packageMates
+                          .map((m) => `${m.first_name} ${m.last_name}`)
+                          .join(', ')}
+                      </span>
                     </span>
                   )}
                 </p>
@@ -277,7 +280,8 @@ export function PlayerBoard({
               {!drafted && canPick && (
                 <button
                   onClick={() => onPick(p)}
-                  className="text-xs rounded bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold px-3 py-1.5 whitespace-nowrap"
+                  className="text-xs rounded bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold px-3 py-1.5 shrink-0 max-w-[8rem] truncate"
+                  title={pickButtonLabel}
                 >
                   {pickButtonLabel}
                 </button>
