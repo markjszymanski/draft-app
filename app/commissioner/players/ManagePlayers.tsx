@@ -150,61 +150,59 @@ export function ManagePlayers({
 
   return (
     <div className="space-y-8">
+      <TestGenerator onGenerated={() => refresh()} />
+      <details className="rounded-lg border border-neutral-800 bg-neutral-900/50">
+        <summary className="cursor-pointer px-4 py-3 text-sm text-neutral-300 hover:text-neutral-100 font-semibold">
+          Bulk import
+        </summary>
+        <div className="p-4 border-t border-neutral-800 space-y-3">
+          <p className="text-xs text-neutral-400">
+            Paste from Excel/Sheets/CSV. Tabs or commas both work. Required columns:{' '}
+            <code>first_name, last_name, position, points</code>. Optional: <code>gender</code>{' '}
+            (defaults to M), <code>package</code> (any rows sharing a non-empty package label
+            become a package — drafting one reserves the others). Header row required.
+          </p>
+          <textarea
+            rows={6}
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={`first_name,last_name,position,gender,points,package\nRyan,McKenzie,F,M,950,\nSteve,Sullivan,F,M,800,sullivans\nJohn,Sullivan,D,M,750,sullivans`}
+            className={`${inputCls} w-full font-mono text-xs`}
+          />
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <label className="text-sm flex items-center gap-2 text-neutral-300">
+              <input
+                type="checkbox"
+                checked={importReplace}
+                onChange={(e) => setImportReplace(e.target.checked)}
+              />
+              Replace the entire pool with this list
+            </label>
+            <button
+              onClick={importBulk}
+              disabled={busy || !importText.trim()}
+              className="rounded bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-sm font-semibold px-4 py-2 disabled:opacity-50"
+            >
+              {busy ? 'Importing…' : 'Import players'}
+            </button>
+          </div>
+          {importMsg && (
+            <p
+              className={`text-sm ${
+                importMsg.startsWith('Error') ? 'text-rose-400' : 'text-emerald-300'
+              }`}
+            >
+              {importMsg}
+            </p>
+          )}
+        </div>
+      </details>
       <PackagesPanel
         players={players}
         packages={packages}
         packageLabelById={packageLabelById}
         onChanged={refresh}
       />
-      <TestGenerator
-        onGenerated={() => refresh()}
-      />
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-        <header className="flex items-baseline justify-between">
-          <h2 className="font-semibold">Bulk import</h2>
-          <span className="text-xs text-neutral-500">
-            Paste from Excel/Sheets/CSV. Tabs or commas both work.
-          </span>
-        </header>
-        <p className="text-xs text-neutral-400">
-          Required columns: <code>first_name, last_name, position, points</code>. Optional:{' '}
-          <code>gender</code> (defaults to M), <code>package</code> (any rows sharing a non-empty
-          package label become a package — drafting one reserves the others). Header row required.
-        </p>
-        <textarea
-          rows={6}
-          value={importText}
-          onChange={(e) => setImportText(e.target.value)}
-          placeholder={`first_name,last_name,position,gender,points,package\nRyan,McKenzie,F,M,950,\nSteve,Sullivan,F,M,800,sullivans\nJohn,Sullivan,D,M,750,sullivans`}
-          className={`${inputCls} w-full font-mono text-xs`}
-        />
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <label className="text-sm flex items-center gap-2 text-neutral-300">
-            <input
-              type="checkbox"
-              checked={importReplace}
-              onChange={(e) => setImportReplace(e.target.checked)}
-            />
-            Replace the entire pool with this list
-          </label>
-          <button
-            onClick={importBulk}
-            disabled={busy || !importText.trim()}
-            className="rounded bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-sm font-semibold px-4 py-2 disabled:opacity-50"
-          >
-            {busy ? 'Importing…' : 'Import players'}
-          </button>
-        </div>
-        {importMsg && (
-          <p
-            className={`text-sm ${
-              importMsg.startsWith('Error') ? 'text-rose-400' : 'text-emerald-300'
-            }`}
-          >
-            {importMsg}
-          </p>
-        )}
-      </section>
 
       <section className="space-y-3">
         <header className="flex items-center justify-between gap-3 flex-wrap">
