@@ -97,6 +97,7 @@ export async function POST() {
       current_pick_number: lastPick.pick_number,
       current_pick_started_at: new Date().toISOString(),
       status: 'active',
+      claim_skipped_for_pick: null,
     })
     .eq('id', draft.id);
 

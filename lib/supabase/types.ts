@@ -15,6 +15,7 @@ export type Draft = {
   roster_size: number;
   current_pick_number: number;
   current_pick_started_at: string | null;
+  claim_skipped_for_pick: number | null;
   commissioner_passcode: string;
   created_at: string;
 };

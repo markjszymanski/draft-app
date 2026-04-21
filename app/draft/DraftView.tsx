@@ -34,9 +34,6 @@ export function DraftView({
   const [pickError, setPickError] = useState<string | null>(null);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [completeModalSeen, setCompleteModalSeen] = useState(false);
-  // Pick-number for which the user has chosen to skip claim resolution
-  // ("let them pick someone else this round"). Resets each new pick.
-  const [claimSkippedFor, setClaimSkippedFor] = useState<number | null>(null);
 
   const { draft, teams, players, picks, loading } = state;
 
@@ -57,9 +54,9 @@ export function DraftView({
   const isMyTurn = !!viewerTeamId && onClock?.teamId === viewerTeamId;
   const amOnDeck = !!viewerTeamId && onDeck?.teamId === viewerTeamId;
 
-  // Players claimed by the on-clock team that haven't been drafted yet.
-  // While these exist (and the user hasn't skipped for this pick), the team is
-  // "on hold" — picking is blocked until a claim is fulfilled or skipped.
+  // Only the commissioner decides whether a pending claim is used or skipped;
+  // the on-clock team is blocked from picking until that happens. The skip flag
+  // lives on the draft row so realtime broadcasts it to every client.
   const onClockClaims =
     onClock && draft?.status === 'active'
       ? players.filter(
@@ -67,21 +64,10 @@ export function DraftView({
         )
       : [];
   const claimSkippedThisPick =
-    !!draft && claimSkippedFor === draft.current_pick_number;
+    !!draft && draft.claim_skipped_for_pick === draft.current_pick_number;
   const onHold =
     onClockClaims.length > 0 && !claimSkippedThisPick;
   const canPick = (isCommissioner || isMyTurn) && !onHold;
-
-  // Reset skip flag whenever the pick number advances (a new pick is up).
-  useEffect(() => {
-    if (
-      claimSkippedFor !== null &&
-      draft &&
-      draft.current_pick_number !== claimSkippedFor
-    ) {
-      setClaimSkippedFor(null);
-    }
-  }, [draft?.current_pick_number, claimSkippedFor, draft]);
 
   // Picks remaining for the on-clock team (including the current one).
   // Used so the resolve modal knows whether "skip" is allowed.
@@ -151,6 +137,14 @@ export function DraftView({
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       alert(json.error ?? 'Could not fulfill claim.');
+    }
+  }
+
+  async function skipClaim() {
+    const res = await fetch('/api/pick/claim/skip', { method: 'POST' });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      alert(json.error ?? 'Could not skip claim.');
     }
   }
 
@@ -347,16 +341,14 @@ export function DraftView({
         />
       )}
 
-      {onHold && onClockTeam && (
+      {onHold && onClockTeam && isCommissioner && (
         <ResolveClaimModal
           team={onClockTeam}
           claimedPlayers={onClockClaims}
           picksRemainingForTeam={picksRemainingForOnClock}
           onClose={() => {}}
           onPickClaim={fulfillClaim}
-          onLetPick={() =>
-            draft && setClaimSkippedFor(draft.current_pick_number)
-          }
+          onLetPick={skipClaim}
         />
       )}
 

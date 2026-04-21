@@ -161,6 +161,7 @@ export async function POST(req: Request) {
       current_pick_number: isComplete ? draft.current_pick_number : nextPickNumber,
       current_pick_started_at: isComplete ? null : new Date().toISOString(),
       status: isComplete ? 'complete' : 'active',
+      claim_skipped_for_pick: null,
     })
     .eq('id', draft.id);
 

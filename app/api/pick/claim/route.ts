@@ -43,25 +43,18 @@ export async function POST(req: Request) {
     draft.draft_mode,
   );
 
-  // Authorization: commissioner, or the team that holds the claim AND is on the clock.
+  // Only the commissioner decides whether a pending claim is used this round.
   if (!session.isCommissioner) {
-    if (session.teamId !== onClockTeamId) {
-      return NextResponse.json({ error: 'Not your turn' }, { status: 409 });
-    }
-    if (player.reserved_for_team_id !== session.teamId) {
-      return NextResponse.json({ error: 'Not your claim' }, { status: 403 });
-    }
-  } else {
-    // Commissioner can only fulfill the on-clock team's claims through this endpoint
-    if (player.reserved_for_team_id !== onClockTeamId) {
-      return NextResponse.json(
-        { error: "Only the on-clock team's claims can be fulfilled this round." },
-        { status: 409 },
-      );
-    }
+    return NextResponse.json({ error: 'Only the commissioner can resolve claims.' }, { status: 403 });
+  }
+  if (player.reserved_for_team_id !== onClockTeamId) {
+    return NextResponse.json(
+      { error: "Only the on-clock team's claims can be fulfilled this round." },
+      { status: 409 },
+    );
   }
 
-  const pickedBy = session.isCommissioner ? 'commissioner' : 'team';
+  const pickedBy = 'commissioner' as const;
 
   const { error: pickErr } = await sb.from('picks').insert({
     draft_id: draft.id,
@@ -92,6 +85,7 @@ export async function POST(req: Request) {
       current_pick_number: isComplete ? draft.current_pick_number : nextPickNumber,
       current_pick_started_at: isComplete ? null : new Date().toISOString(),
       status: isComplete ? 'complete' : 'active',
+      claim_skipped_for_pick: null,
     })
     .eq('id', draft.id);
 

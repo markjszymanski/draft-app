@@ -20,6 +20,9 @@ create table drafts (
   roster_size int not null default 15,
   current_pick_number int not null default 1,
   current_pick_started_at timestamptz,
+  -- Set by the commissioner to "skip claim resolution for this pick" so the
+  -- on-clock team can draft normally this round. Cleared when the pick advances.
+  claim_skipped_for_pick int,
   commissioner_passcode text not null,
   created_at timestamptz not null default now()
 );
