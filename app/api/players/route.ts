@@ -14,8 +14,8 @@ type PlayerInput = {
 function validate(input: Partial<PlayerInput>): { ok: true; value: PlayerInput } | { ok: false; error: string } {
   if (!input.first_name?.trim()) return { ok: false, error: 'first_name required' };
   if (!input.last_name?.trim()) return { ok: false, error: 'last_name required' };
-  if (!input.position || !['F', 'D', 'G'].includes(input.position))
-    return { ok: false, error: 'position must be F, D, or G' };
+  if (!input.position || !['F', 'D', 'FD', 'G'].includes(input.position))
+    return { ok: false, error: 'position must be F, D, FD, or G' };
   if (!input.gender || !['M', 'F'].includes(input.gender))
     return { ok: false, error: 'gender must be M or F' };
   if (typeof input.point_value !== 'number' || Number.isNaN(input.point_value) || input.point_value < 0)
