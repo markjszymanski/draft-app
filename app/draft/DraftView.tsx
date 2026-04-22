@@ -13,6 +13,7 @@ import { DraftCompleteModal } from '@/components/draft/DraftCompleteModal';
 import { ResolveClaimModal } from '@/components/draft/ResolveClaimModal';
 import { PickTimer } from '@/components/draft/PickTimer';
 import type { Player } from '@/lib/supabase/types';
+import { fmtPoints } from '@/lib/utils';
 
 type Tab = 'board' | 'team' | 'teams' | 'order';
 
@@ -94,11 +95,16 @@ export function DraftView({
     }
   }, [draft?.status, completeModalSeen]);
 
+  // Most recent completed pick — shown in the header so everyone can see who
+  // just went. Picks are kept sorted by pick_number; undo only removes the tail.
+  const lastPick = picks.length > 0 ? picks[picks.length - 1] : null;
+  const lastPickTeam = lastPick ? teams.find((t) => t.id === lastPick.team_id) ?? null : null;
+  const lastPickPlayer = lastPick ? players.find((p) => p.id === lastPick.player_id) ?? null : null;
+
   // Commissioner has no team of their own — focus on the team currently on the clock.
   // When the draft is complete, fall back to the team that made the very last pick.
-  const lastPickTeamId = picks.length > 0 ? picks[picks.length - 1].team_id : null;
   const focusTeamId = isCommissioner
-    ? onClock?.teamId ?? lastPickTeamId
+    ? onClock?.teamId ?? lastPick?.team_id ?? null
     : viewerTeamId;
   const focusTeam = teams.find((t) => t.id === focusTeamId) ?? null;
 
@@ -210,6 +216,21 @@ export function DraftView({
               {amOnDeck && (
                 <span className="ml-2 font-bold uppercase tracking-wide">— get ready</span>
               )}
+            </div>
+          )}
+          {lastPick && lastPickTeam && lastPickPlayer && (
+            <div className="px-4 py-2 border-b border-neutral-800 text-sm bg-neutral-950 text-neutral-400">
+              <span className="text-xs uppercase tracking-wider">Last pick:</span>{' '}
+              <span className="text-neutral-200">{lastPickTeam.name}</span>
+              <span className="text-neutral-500"> — </span>
+              <span
+                className={
+                  lastPickPlayer.gender === 'F' ? 'italic text-pink-300' : 'text-neutral-100'
+                }
+              >
+                {lastPickPlayer.first_name} {lastPickPlayer.last_name}
+              </span>
+              <span className="text-neutral-500"> ({fmtPoints(lastPickPlayer.point_value)} pts)</span>
             </div>
           )}
         </>
